@@ -186,12 +186,23 @@ export class GameScene {
         const playerRadius = 14;
 
         for (const entity of this.entities) {
-            if (!(entity instanceof Tree)) continue;
-            if (!entity.collider) continue;
-            if (entity.z <= 0 || entity.z > 300) continue;
+            if (!(entity instanceof Tree)) {
+                continue
+            };
+
+            if (!entity.collider) {
+                continue
+            };
+
+            if (entity.z <= 0 || entity.z > 300) {
+                continue
+            };
 
             const p = this.game.camera.project(entity);
-            if (!p || p.scale < 0.05) continue;
+            
+            if (!p || p.scale < 0.05) {
+                continue
+            };
 
             const treeBaseY =
                 p.y + entity.renderable.trunkHeight * p.scale;
