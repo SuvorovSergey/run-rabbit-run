@@ -193,7 +193,6 @@ export class GameScene {
             const p = this.game.camera.project(entity);
             if (!p || p.scale < 0.05) continue;
 
-            // ⬇️ СМЕЩЕНИЕ К ОСНОВАНИЮ СТВОЛА
             const treeBaseY =
                 p.y + entity.renderable.trunkHeight * p.scale;
 
