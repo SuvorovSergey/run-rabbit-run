@@ -4,6 +4,8 @@
 
 Игрок управляет кроликом, убегающим через лес. Со временем скорость растёт, а деревьев становится всё больше.
 
+Играть [https://suvorovsergey.github.io/run-rabbit-run/](https://suvorovsergey.github.io/run-rabbit-run/)
+
 ![Alt text for the image](img/run_rabbit_run.png)
 
 ### Управление
