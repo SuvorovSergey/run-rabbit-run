@@ -18,7 +18,7 @@ export class Game {
     }
 
     start() {
-        this.sceneManager.setScene('game');
+        this.sceneManager.setScene('start');
         requestAnimationFrame(this.loop.bind(this));
     }
 

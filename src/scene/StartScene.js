@@ -44,6 +44,8 @@ export class StartScene {
     #drawInstructions() {
         const instructions = [
             'Use Arrow Keys to Move',
+            'Press Space to Pause',
+            'Press ESC to Exit to the Main Menu',
             'Press Enter to Start'
         ];
         const instructionSize = CONFIG.CANVAS_WIDTH / 40;
