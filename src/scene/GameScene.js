@@ -257,6 +257,8 @@ export class GameScene {
             speed: this.game.speed,
         };
 
+        // Сохраняем текущую сцену для использования в GameOverScene
+        this.game.state.backgroundScene = this;
         this.game.sceneManager.setScene('gameover');
     }
 }

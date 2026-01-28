@@ -4,6 +4,8 @@ export class GameState {
         this.seconds = 0;
         this.isPaused = false;
         this.level = 1;
+        this.lastRunStats = null;
+        this.backgroundScene = null;
     }
 
     update(deltaTime) {
@@ -14,6 +16,8 @@ export class GameState {
 
     reset() {
         this.seconds = 0;
+        this.lastRunStats = null;
+        this.backgroundScene = null;
     }
 
     // форматирование времени в MM:SS

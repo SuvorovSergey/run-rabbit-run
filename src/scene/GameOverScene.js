@@ -24,14 +24,22 @@ export class GameOverScene {
     }
 
     draw() {
-        this.game.renderer.clear();
+        // Рисуем фоновую сцену (игровую сцену)
+        if (this.game.state.backgroundScene) {
+            this.game.state.backgroundScene.draw();
+            
+            // Затемняем фон
+            this.game.renderer.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.game.renderer.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        } else {
+            this.game.renderer.clear();
+        }
 
         this.#drawGameOver();
         if (this.titleX <= this.titleXFinal) {
             this.#drawStats();
             this.#drawInstructions();
         }
-
     }
 
     #drawGameOver() {
