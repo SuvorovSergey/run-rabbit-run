@@ -68,7 +68,7 @@ export class GameScene {
         const treeCount = this.entities.filter(e => e instanceof Tree).length;
         const statsText = `Trees: ${treeCount}  Speed: ${this.game.speed.toFixed(1)}`;
         const statsSize = levelSize * 0.5;
-        const statsY = y + levelSize ;
+        const statsY = y + levelSize;
 
         this.game.renderer.drawText(
             levelText,
@@ -251,6 +251,15 @@ export class GameScene {
     }
 
     #onPlayerHit(tree) {
+        const treeCount = this.entities.filter(e => e instanceof Tree).length;
+
+        this.game.state.lastRunStats = {
+            level: this.game.state.level,
+            time: this.game.state.getFormattedTime(),
+            trees: treeCount,
+            speed: this.game.speed,
+        };
+
         this.game.sceneManager.setScene('gameover');
     }
 }

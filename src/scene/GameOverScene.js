@@ -28,6 +28,7 @@ export class GameOverScene {
 
         this.#drawGameOver();
         if (this.titleX <= this.titleXFinal) {
+            this.#drawStats();
             this.#drawInstructions();
         }
 
@@ -44,12 +45,59 @@ export class GameOverScene {
         );
     }
 
+    #drawStats() {
+        const stats = this.game.state.lastRunStats || {
+            level: this.game.state.level,
+            time: this.game.state.getFormattedTime(),
+            trees: this.game.state.treeCount,
+            speed: this.game.speed,
+        };
+
+        const level = stats.level;
+        const time = stats.time;
+        const trees = stats.trees;
+        const speed = stats.speed.toFixed(1);
+
+        const statsLines = [
+            `Level: ${level}`,
+            `Time: ${time}`,
+            `Trees: ${trees}`,
+            `Speed: ${speed}`,
+        ];
+
+        const statsSize = CONFIG.CANVAS_WIDTH / 40;
+        const totalHeight = statsLines.length * (statsSize + 10);
+        let startY = this.titleY + this.titleSize / 2 + statsSize;
+
+        statsLines.forEach((line, index) => {
+            const textWidth = this.game.renderer.getTextWidth(line, statsSize);
+            const x = (CONFIG.CANVAS_WIDTH - textWidth) / 2;
+            const y = startY + index * (statsSize + 10);
+
+            this.game.renderer.drawText(
+                line,
+                x,
+                y,
+                {
+                    font: `${statsSize}px Arial`,
+                }
+            );
+        });
+    }
+
     #drawInstructions() {
         const instructions = [
             'Press Enter to Continue'
         ];
         const instructionSize = CONFIG.CANVAS_WIDTH / 40;
-        let startY = this.titleY + this.titleSize;
+        const statsSize = CONFIG.CANVAS_WIDTH / 40;
+        const statsLinesCount = 4;
+        let startY =
+            this.titleY
+            + this.titleSize / 2
+            + statsSize
+            + statsLinesCount * (statsSize + 10)
+            + 40;
 
         instructions.forEach((instruction, index) => {
             const textWidth = this.game.renderer.getTextWidth(instruction, instructionSize);
