@@ -307,37 +307,4 @@ export class Renderer {
 
         this.ctx.restore();
     }
-
-    drawTouchControls(input) {
-        if (!input.isTouchDevice) return;
-
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-
-        this.ctx.save();
-
-        // Левая зона (движение влево)
-        const leftZone = input.touchZones.get('left');
-        if (leftZone) {
-            // Стрелка влево
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            this.ctx.font = '40px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'middle';
-            this.ctx.fillText('←', leftZone.x + leftZone.width / 2, height / 2);
-        }
-
-        // Правая зона (движение вправо)
-        const rightZone = input.touchZones.get('right');
-        if (rightZone) {
-            // Стрелка вправо
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            this.ctx.font = '40px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'middle';
-            this.ctx.fillText('→', rightZone.x + rightZone.width / 2, height / 2);
-        }
-
-        this.ctx.restore();
-    }
 }
