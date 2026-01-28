@@ -16,6 +16,17 @@ export class StartScene {
             this.game.sceneManager.setScene('game')
         }
 
+        // Проверяем касание для мобильных устройств
+        if (this.game.input.isTouchDevice) {
+            for (const [touchId, touch] of this.game.input.touches) {
+                // Любое касание запускает игру
+                if (touch.startY > CONFIG.CANVAS_HEIGHT / 2) { // Нижняя половина экрана
+                    this.game.sceneManager.setScene('game');
+                    break;
+                }
+            }
+        }
+
         if (this.titleX <= this.titleXFinal) {
             return
         }
@@ -42,12 +53,16 @@ export class StartScene {
     }
 
     #drawInstructions() {
-        const instructions = [
+        const instructions = this.game.input.isTouchDevice ? [
+            'Tap Screen to Start',
+            'Use Left/Right Areas to Move',
+        ] : [
             'Use Arrow Keys to Move',
             'Press Space to Pause',
             'Press ESC to Exit to the Main Menu',
             'Press Enter to Start'
         ];
+        
         const instructionSize = CONFIG.CANVAS_WIDTH / 40;
         let startY = this.titleY + this.titleSize;
 

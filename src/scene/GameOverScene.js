@@ -16,6 +16,17 @@ export class GameOverScene {
             this.game.sceneManager.setScene('start')
         }
 
+        // Проверяем касание для мобильных устройств
+        if (this.game.input.isTouchDevice) {
+            for (const [touchId, touch] of this.game.input.touches) {
+                // Любое касание в нижней половине экрана возвращает в меню
+                if (touch.startY > CONFIG.CANVAS_HEIGHT / 2) {
+                    this.game.sceneManager.setScene('start');
+                    break;
+                }
+            }
+        }
+
         if (this.titleX <= this.titleXFinal) {
             return
         }
@@ -95,23 +106,26 @@ export class GameOverScene {
     }
 
     #drawInstructions() {
-        const instructions = [
+        const instructions = this.game.input.isTouchDevice ? [
+            'Tap Screen to Continue'
+        ] : [
             'Press Enter to Continue'
         ];
-        const instructionSize = CONFIG.CANVAS_WIDTH / 50; // уменьшили размер
-        const statsSize = CONFIG.CANVAS_WIDTH / 50; // уменьшили размер
+        
+        const instructionSize = CONFIG.CANVAS_WIDTH / 50;
+        const statsSize = CONFIG.CANVAS_WIDTH / 50;
         const statsLinesCount = 5;
         let startY =
             this.titleY
             + this.titleSize / 2
             + statsSize
-            + statsLinesCount * (statsSize + 8) // уменьшили отступ
-            + 20; // уменьшили отступ
+            + statsLinesCount * (statsSize + 8)
+            + 20;
 
         instructions.forEach((instruction, index) => {
             const textWidth = this.game.renderer.getTextWidth(instruction, instructionSize);
             const x = (CONFIG.CANVAS_WIDTH - textWidth) / 2;
-            const y = startY + index * (instructionSize + 8); // уменьшили отступ
+            const y = startY + index * (instructionSize + 8);
 
             this.game.renderer.drawText(
                 instruction,
