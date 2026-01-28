@@ -3,7 +3,7 @@ export class Tree extends Entity {
     constructor(x, z) {
         super(x, z);
 
-        const maxTrunkH = 400;
+        const maxTrunkH = 300;
         const minTrunkH = 200;
 
         const trunkHeight = minTrunkH + Math.random() * (maxTrunkH - minTrunkH);
