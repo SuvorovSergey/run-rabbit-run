@@ -12,9 +12,12 @@ export class Camera {
     project(entity) {
         const scale = this.depth / (entity.z + 1);
 
+        // Базовая позиция дерева на земле
+        const baseY = this.horizonY + 50 * scale;
+
         return {
             x: this.width / 2 + (entity.x - this.playerX) * scale,
-            y: this.horizonY - 150 * scale,
+            y: baseY,
             scale
         };
     }

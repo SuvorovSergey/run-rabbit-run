@@ -3,9 +3,10 @@ export class Tree extends Entity {
     constructor(x, z) {
         super(x, z);
 
-        const maxTrunkH = 200;
+        const maxTrunkH = 400;
+        const minTrunkH = 200;
 
-        const trunkHeight = maxTrunkH;
+        const trunkHeight = minTrunkH + Math.random() * (maxTrunkH - minTrunkH);
         const trunkWidth = 15 + Math.random() * 15;
 
         const crownScale = 2.2 + (trunkHeight / maxTrunkH) * 0.8 * Math.random();

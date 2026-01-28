@@ -67,6 +67,26 @@ export class Renderer {
 
     drawTree(x, y, scale, options) {
         const { crownColor, crownScale, trunkColor, trunkWidth, trunkHeight } = options;
+        
+        // Вычисляем фактор затемнения на основе расстояния (scale)
+        // Чем меньше scale, тем дальше дерево и тем темнее оно должно быть
+        const darknessFactor = Math.max(0.3, Math.min(1, scale * 2));
+        
+        // Применяем затемнение к цветам
+        const applyDarkness = (color) => {
+            const rgb = color.match(/\d+/g);
+            if (rgb) {
+                const r = Math.floor(rgb[0] * darknessFactor);
+                const g = Math.floor(rgb[1] * darknessFactor);
+                const b = Math.floor(rgb[2] * darknessFactor);
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+            return color;
+        };
+        
+        const darkenedCrownColor = applyDarkness(crownColor);
+        const darkenedTrunkColor = applyDarkness(trunkColor);
+        
         const trunkW = trunkWidth * scale;
         const trunkH = trunkHeight * scale;
 
@@ -76,21 +96,21 @@ export class Renderer {
 
         this.ctx.save()
 
-        // ствол
-        this.ctx.fillStyle = trunkColor;
+        // ствол - рисуем ВВЕРХ от точки y (основание на земле)
+        this.ctx.fillStyle = darkenedTrunkColor;
         this.ctx.fillRect(
             x - trunkW / 2,
-            y,
+            y - trunkH,
             trunkW,
             trunkH
         );
 
-        // крона
-        this.ctx.fillStyle = crownColor;
+        // крона - над стволом
+        this.ctx.fillStyle = darkenedCrownColor;
         this.ctx.beginPath();
         this.ctx.ellipse(
             x,
-            y - crownH / 2 + 10,
+            y - trunkH - crownH / 2 + 10,
             crownW / 2,
             crownH / 2,
             0, 0, Math.PI * 2

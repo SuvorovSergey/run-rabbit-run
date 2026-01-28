@@ -99,7 +99,7 @@ export class GameScene {
         }
 
         this.game.state.level = level;
-        this.game.state.treeCount = this.game.state.treeCount + (level - 1) * 100;
+        this.game.state.treeCount = this.game.state.treeCount + 100;
 
         if (level % 2 === 0) {
             this.game.speed += 0.3;
@@ -230,8 +230,7 @@ export class GameScene {
                 continue
             };
 
-            const treeBaseY =
-                p.y + entity.renderable.trunkHeight * p.scale;
+            const treeBaseY = p.y; // основание дерева на земле
 
             const treeRadius =
                 (entity.collider.width / 2) * p.scale;
