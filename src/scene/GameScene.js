@@ -103,6 +103,7 @@ export class GameScene {
 
         if (level % 2 === 0) {
             this.game.speed += 0.3;
+            this.game.speed = Math.min(this.game.speed, 3); // ограничиваем скорость максимум 3
         }
     }
 
