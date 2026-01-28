@@ -12,14 +12,13 @@ export class GameScene {
         this.game.state.seconds = 0;
         this.game.state.level = 1;
         this.game.speed = this.game.config.SPEED;
-
         this.game.state.isPaused = false;
-        this.baseTreeCount = this.game.state.treeCount;
+        this.game.state.treeCount = this.game.config.TREE_INITIAL_COUNT;
 
+        // наполняем стартовый лес деревьями
+        this.entities = [];
         for (let i = 0; i < this.game.state.treeCount; i++) {
-            this.entities.push(
-                this.#spawnTree()
-            );
+            this.entities.push(this.#spawnTree());
         }
     }
 
@@ -94,17 +93,16 @@ export class GameScene {
     }
 
     #updateLevel() {
-        const level = Math.floor(this.game.state.seconds / 30) + 1;
+        const level = Math.floor(this.game.state.seconds / 15) + 1;
         if (level === this.game.state.level) {
             return;
         }
 
         this.game.state.level = level;
-        this.game.state.treeCount =
-            this.baseTreeCount + (level - 1) * 150;
+        this.game.state.treeCount = this.game.state.treeCount + (level - 1) * 100;
 
         if (level % 2 === 0) {
-            this.game.speed += 0.5;
+            this.game.speed += 0.3;
         }
     }
 
@@ -145,14 +143,14 @@ export class GameScene {
             }
         });
 
+        // удаляем деревья, которые ушли за камеру
         this.entities = this.entities.filter(entity => entity.z > 0);
 
-        const treeCount = this.entities.filter(e => e instanceof Tree).length;
-
-        if (treeCount < this.game.state.treeCount) {
-            this.entities.push(
-                this.#spawnTree()
-            );
+        // гарантируем, что количество деревьев не меньше заданного
+        let treeCount = this.entities.filter(e => e instanceof Tree).length;
+        while (treeCount < this.game.state.treeCount) {
+            this.entities.push(this.#spawnTree());
+            treeCount++;
         }
     }
 
