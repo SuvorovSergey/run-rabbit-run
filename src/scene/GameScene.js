@@ -1,12 +1,14 @@
 import { Player } from '../entities/Player.js';
 import { Tree } from '../entities/Tree.js';
 import { Carrot } from '../entities/Carrot.js';
+import { Mushroom } from '../entities/Mushroom.js';
 
 export class GameScene {
     constructor(game) {
         this.game = game;
         this.entities = [];
         this.player = new Player(0, 0);
+        this.mushroomNotification = null;
     }
 
     init() {
@@ -16,6 +18,7 @@ export class GameScene {
         this.game.state.isPaused = false;
         this.game.state.treeCount = this.game.config.TREE_INITIAL_COUNT;
         this.game.state.carrotsCollected = 0;
+        this.mushroomNotification = null;
 
         // наполняем стартовый лес деревьями
         this.entities = [];
@@ -26,6 +29,11 @@ export class GameScene {
         // добавляем начальные морковки
         for (let i = 0; i < 10; i++) {
             this.entities.push(this.#spawnCarrot());
+        }
+        
+        // добавляем начальные мухоморы (реже чем морковки)
+        for (let i = 0; i < 3; i++) {
+            this.entities.push(this.#spawnMushroom());
         }
     }
 
@@ -58,12 +66,34 @@ export class GameScene {
         return new Carrot(carrotX, carrotZ);
     }
 
+    #spawnMushroom() {
+        const centerX = this.game.camera.playerX || 0;
+        const forestHalfWidth = this.game.config.FOREST_HALF_WIDTH || 3000;
+    
+        // X: случайная позиция в пределах леса
+        const xOffset = (Math.random() - 0.5) * 2;
+        const mushroomX = centerX + xOffset * forestHalfWidth * 0.8;
+    
+        // Z: дальше от кролика, чтобы было время собраться
+        const mushroomZ = 500 + Math.random() * 800;
+    
+        return new Mushroom(mushroomX, mushroomZ);
+    }
+
     update(deltaTime) {
         this.#checkInput();
         if (this.game.state.isPaused) {
             return
         };
         this.game.state.update(deltaTime);
+
+        // обновляем таймер уведомления о мухоморе
+        if (this.mushroomNotification) {
+            this.mushroomNotification.elapsed += deltaTime;
+            if (this.mushroomNotification.elapsed >= this.mushroomNotification.duration) {
+                this.mushroomNotification = null;
+            }
+        }
 
         this.#updateLevel();
         this.#updateEntities(deltaTime);
@@ -77,6 +107,7 @@ export class GameScene {
         this.#drawTime();
         this.#drawLevel();
         this.#drawCarrotCount();
+        this.#drawMushroomNotification();
         this.#drawPlayer();
     }
 
@@ -128,6 +159,31 @@ export class GameScene {
                 color: '#FFA500',
                 font: `${carrotSize}px Arial`,
                 align: 'left',
+                shadow: true
+            }
+        );
+    }
+
+    #drawMushroomNotification() {
+        if (!this.mushroomNotification) {
+            return;
+        }
+
+        const notificationSize = this.game.config.CANVAS_WIDTH / 25;
+        const x = this.game.config.CANVAS_WIDTH / 2;
+        const y = 100;
+
+        // Вычисляем прозрачность на основе времени
+        const alpha = Math.max(0, 1 - (this.mushroomNotification.elapsed / this.mushroomNotification.duration));
+        
+        this.game.renderer.drawText(
+            this.mushroomNotification.text,
+            x,
+            y,
+            {
+                color: `rgba(220, 20, 60, ${alpha})`, // красный цвет с прозрачностью
+                font: `${notificationSize}px Arial`,
+                align: 'center',
                 shadow: true
             }
         );
@@ -200,6 +256,12 @@ export class GameScene {
         if (carrotCount < 5 && Math.random() < 0.02) { // 2% шанс каждый кадр
             this.entities.push(this.#spawnCarrot());
         }
+        
+        // добавляем новые мухоморы реже чем морковки
+        let mushroomCount = this.entities.filter(e => e instanceof Mushroom).length;
+        if (mushroomCount < 2 && Math.random() < 0.005) { // 0.5% шанс каждый кадр (в 4 раза реже)
+            this.entities.push(this.#spawnMushroom());
+        }
     }
 
     #drawTime() {
@@ -244,6 +306,13 @@ export class GameScene {
                         break;
                     case 'carrot':
                         this.game.renderer.drawCarrot(
+                            p.x,
+                            p.y,
+                            p.scale
+                        );
+                        break;
+                    case 'mushroom':
+                        this.game.renderer.drawMushroom(
                             p.x,
                             p.y,
                             p.scale
@@ -335,6 +404,40 @@ export class GameScene {
                 return;
             }
         }
+        
+        // проверка столкновений с мухоморами
+        for (let i = this.entities.length - 1; i >= 0; i--) {
+            const entity = this.entities[i];
+            if (!(entity instanceof Mushroom)) {
+                continue;
+            }
+
+            if (!entity.collider) {
+                continue;
+            }
+
+            if (entity.z <= 0 || entity.z > 300) {
+                continue;
+            }
+
+            const p = this.game.camera.project(entity);
+            
+            if (!p || p.scale < 0.05) {
+                continue;
+            }
+
+            const mushroomRadius = (entity.collider.width / 2) * p.scale;
+
+            const dx = p.x - playerX;
+            const dy = p.y - playerY;
+
+            const r = playerRadius + mushroomRadius;
+
+            if (dx * dx + dy * dy < r * r) {
+                this.#onMushroomCollected(entity, i);
+                return;
+            }
+        }
     }
 
     #onPlayerHit(tree) {
@@ -358,6 +461,21 @@ export class GameScene {
         this.game.state.carrotsCollected++;
         
         // удаляем морковку из массива сущностей
+        this.entities.splice(index, 1);
+    }
+
+    #onMushroomCollected(mushroom, index) {
+        // снижаем скорость на 0.3
+        this.game.speed = Math.max(0.5, this.game.speed - 0.3); // минимальная скорость 0.5
+        
+        // активируем уведомление о снижении скорости
+        this.mushroomNotification = {
+            text: '🍄 Speed Reduced!',
+            duration: 3.0, // 3 секунды
+            elapsed: 0
+        };
+        
+        // удаляем мухомор из массива сущностей
         this.entities.splice(index, 1);
     }
 }

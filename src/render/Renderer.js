@@ -259,4 +259,52 @@ export class Renderer {
 
         this.ctx.restore();
     }
+
+    drawMushroom(x, y, scale) {
+        const capWidth = 20 * scale;
+        const capHeight = 10 * scale;
+        const stemWidth = 8 * scale;
+        const stemHeight = 12 * scale;
+
+        // Вычисляем фактор затемнения на основе расстояния
+        const darknessFactor = Math.max(0.4, Math.min(1, scale * 2));
+
+        this.ctx.save();
+
+        // Рисуем ножку гриба
+        const stemColor = `rgba(255, 255, 255, ${0.9 * darknessFactor})`;
+        this.ctx.fillStyle = stemColor;
+        
+        this.ctx.beginPath();
+        this.ctx.rect(x - stemWidth / 2, y, stemWidth, stemHeight);
+        this.ctx.fill();
+
+        // Рисуем шляпку гриба (красная с белыми точками)
+        const capColor = `rgba(220, 20, 60, ${0.9 * darknessFactor})`;
+        this.ctx.fillStyle = capColor;
+        
+        this.ctx.beginPath();
+        this.ctx.ellipse(x, y - capHeight / 2, capWidth / 2, capHeight, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // Рисуем белые точки на шляпке
+        const dotColor = `rgba(255, 255, 255, ${0.8 * darknessFactor})`;
+        this.ctx.fillStyle = dotColor;
+        
+        // Центральная точка
+        this.ctx.beginPath();
+        this.ctx.arc(x, y - capHeight / 2, 2 * scale, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Боковые точки
+        this.ctx.beginPath();
+        this.ctx.arc(x - capWidth / 4, y - capHeight / 2, 1.5 * scale, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        this.ctx.beginPath();
+        this.ctx.arc(x + capWidth / 4, y - capHeight / 2, 1.5 * scale, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        this.ctx.restore();
+    }
 }
