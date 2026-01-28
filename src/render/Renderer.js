@@ -66,7 +66,7 @@ export class Renderer {
     }
 
     drawTree(x, y, scale, options) {
-        const { crownColor, crownScale, trunkColor, trunkWidth, trunkHeight } = options;
+        const { crownColor, crownScale, crownType, crownWidth, crownHeight, trunkColor, trunkWidth, trunkHeight } = options;
         
         // Вычисляем фактор затемнения на основе расстояния (scale)
         // Чем меньше scale, тем дальше дерево и тем темнее оно должно быть
@@ -91,8 +91,8 @@ export class Renderer {
         const trunkH = trunkHeight * scale;
 
         const crownS = scale * crownScale;
-        const crownW = 50 * crownS;
-        const crownH = 70 * crownS;
+        const crownW = crownWidth * crownS;
+        const crownH = crownHeight * crownS;
 
         this.ctx.save()
 
@@ -108,13 +108,40 @@ export class Renderer {
         // крона - над стволом
         this.ctx.fillStyle = darkenedCrownColor;
         this.ctx.beginPath();
-        this.ctx.ellipse(
-            x,
-            y - trunkH - crownH / 2 + 10,
-            crownW / 2,
-            crownH / 2,
-            0, 0, Math.PI * 2
-        );
+        
+        switch (crownType) {
+            case 'circle':
+                this.ctx.arc(
+                    x,
+                    y - trunkH - crownH / 2 + 10,
+                    crownW / 2,
+                    0, Math.PI * 2
+                );
+                break;
+            case 'triangle':
+                this.ctx.moveTo(x, y - trunkH - crownH + 10);
+                this.ctx.lineTo(x - crownW / 2, y - trunkH + 10);
+                this.ctx.lineTo(x + crownW / 2, y - trunkH + 10);
+                this.ctx.closePath();
+                break;
+            case 'rect':
+                this.ctx.rect(
+                    x - crownW / 2,
+                    y - trunkH - crownH + 10,
+                    crownW,
+                    crownH
+                );
+                break;
+            default: // ellipse
+                this.ctx.ellipse(
+                    x,
+                    y - trunkH - crownH / 2 + 10,
+                    crownW / 2,
+                    crownH / 2,
+                    0, 0, Math.PI * 2
+                );
+        }
+        
         this.ctx.fill();
         this.ctx.restore();
     }
