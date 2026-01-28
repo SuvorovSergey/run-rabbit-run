@@ -65,6 +65,11 @@ export class GameScene {
         const x = 20;
         const y = 40;
 
+        const treeCount = this.entities.filter(e => e instanceof Tree).length;
+        const statsText = `Trees: ${treeCount}  Speed: ${this.game.speed.toFixed(1)}`;
+        const statsSize = levelSize * 0.5;
+        const statsY = y + levelSize ;
+
         this.game.renderer.drawText(
             levelText,
             x,
@@ -72,6 +77,17 @@ export class GameScene {
             {
                 color: 'white',
                 font: `${levelSize}px Arial`,
+                align: 'left'
+            }
+        );
+
+        this.game.renderer.drawText(
+            statsText,
+            x,
+            statsY,
+            {
+                color: 'white',
+                font: `${statsSize}px Arial`,
                 align: 'left'
             }
         );
