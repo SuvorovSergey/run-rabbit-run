@@ -226,4 +226,37 @@ export class Renderer {
 
         this.ctx.restore();
     }
+
+    drawCarrot(x, y, scale) {
+        const carrotWidth = 12 * scale;
+        const carrotHeight = 25 * scale;
+        const greenWidth = 8 * scale;
+        const greenHeight = 6 * scale;
+
+        // Вычисляем фактор затемнения на основе расстояния
+        const darknessFactor = Math.max(0.4, Math.min(1, scale * 2));
+
+        this.ctx.save();
+
+        // Рисуем морковную часть
+        const orangeColor = `rgba(255, ${Math.floor(140 * darknessFactor)}, 0, 1)`;
+        this.ctx.fillStyle = orangeColor;
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y);
+        this.ctx.lineTo(x - carrotWidth / 2, y + carrotHeight);
+        this.ctx.lineTo(x + carrotWidth / 2, y + carrotHeight);
+        this.ctx.closePath();
+        this.ctx.fill();
+
+        // Рисуем зеленую ботву
+        const greenColor = `rgba(0, ${Math.floor(150 * darknessFactor)}, 0, 1)`;
+        this.ctx.fillStyle = greenColor;
+        
+        this.ctx.beginPath();
+        this.ctx.ellipse(x, y - greenHeight / 2, greenWidth, greenHeight, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        this.ctx.restore();
+    }
 }

@@ -1,5 +1,6 @@
 import { Player } from '../entities/Player.js';
 import { Tree } from '../entities/Tree.js';
+import { Carrot } from '../entities/Carrot.js';
 
 export class GameScene {
     constructor(game) {
@@ -14,11 +15,17 @@ export class GameScene {
         this.game.speed = this.game.config.SPEED;
         this.game.state.isPaused = false;
         this.game.state.treeCount = this.game.config.TREE_INITIAL_COUNT;
+        this.game.state.carrotsCollected = 0;
 
         // наполняем стартовый лес деревьями
         this.entities = [];
         for (let i = 0; i < this.game.state.treeCount; i++) {
             this.entities.push(this.#spawnTree());
+        }
+        
+        // добавляем начальные морковки
+        for (let i = 0; i < 10; i++) {
+            this.entities.push(this.#spawnCarrot());
         }
     }
 
@@ -35,6 +42,20 @@ export class GameScene {
         const treeZ = 400 + zRandom * zRandom * 600;
     
         return new Tree(treeX, treeZ);
+    }
+
+    #spawnCarrot() {
+        const centerX = this.game.camera.playerX || 0;
+        const forestHalfWidth = this.game.config.FOREST_HALF_WIDTH || 3000;
+    
+        // X: случайная позиция в пределах леса
+        const xOffset = (Math.random() - 0.5) * 2;
+        const carrotX = centerX + xOffset * forestHalfWidth * 0.8;
+    
+        // Z: дальше от кролика, чтобы было время собраться
+        const carrotZ = 500 + Math.random() * 800;
+    
+        return new Carrot(carrotX, carrotZ);
     }
 
     update(deltaTime) {
@@ -55,6 +76,7 @@ export class GameScene {
         this.#drawEntities();
         this.#drawTime();
         this.#drawLevel();
+        this.#drawCarrotCount();
         this.#drawPlayer();
     }
 
@@ -88,6 +110,25 @@ export class GameScene {
                 color: 'white',
                 font: `${statsSize}px Arial`,
                 align: 'left'
+            }
+        );
+    }
+
+    #drawCarrotCount() {
+        const carrotText = `🥕 Carrots: ${this.game.state.carrotsCollected}`;
+        const carrotSize = this.game.config.CANVAS_WIDTH / 35;
+        const x = 20;
+        const y = 120;
+
+        this.game.renderer.drawText(
+            carrotText,
+            x,
+            y,
+            {
+                color: '#FFA500',
+                font: `${carrotSize}px Arial`,
+                align: 'left',
+                shadow: true
             }
         );
     }
@@ -153,6 +194,12 @@ export class GameScene {
             this.entities.push(this.#spawnTree());
             treeCount++;
         }
+        
+        // добавляем новые морковки периодически
+        let carrotCount = this.entities.filter(e => e instanceof Carrot).length;
+        if (carrotCount < 5 && Math.random() < 0.02) { // 2% шанс каждый кадр
+            this.entities.push(this.#spawnCarrot());
+        }
     }
 
     #drawTime() {
@@ -195,6 +242,13 @@ export class GameScene {
                             entity.renderable
                         );
                         break;
+                    case 'carrot':
+                        this.game.renderer.drawCarrot(
+                            p.x,
+                            p.y,
+                            p.scale
+                        );
+                        break;
                 }
             });
     }
@@ -212,6 +266,7 @@ export class GameScene {
         const playerY = this.game.config.CANVAS_HEIGHT - 65;
         const playerRadius = 14;
 
+        // проверка столкновений с деревьями
         for (const entity of this.entities) {
             if (!(entity instanceof Tree)) {
                 continue
@@ -246,6 +301,40 @@ export class GameScene {
                 return;
             }
         }
+        
+        // проверка столкновений с морковками
+        for (let i = this.entities.length - 1; i >= 0; i--) {
+            const entity = this.entities[i];
+            if (!(entity instanceof Carrot)) {
+                continue;
+            }
+
+            if (!entity.collider) {
+                continue;
+            }
+
+            if (entity.z <= 0 || entity.z > 300) {
+                continue;
+            }
+
+            const p = this.game.camera.project(entity);
+            
+            if (!p || p.scale < 0.05) {
+                continue;
+            }
+
+            const carrotRadius = (entity.collider.width / 2) * p.scale;
+
+            const dx = p.x - playerX;
+            const dy = p.y - playerY;
+
+            const r = playerRadius + carrotRadius;
+
+            if (dx * dx + dy * dy < r * r) {
+                this.#onCarrotCollected(entity, i);
+                return;
+            }
+        }
     }
 
     #onPlayerHit(tree) {
@@ -256,10 +345,19 @@ export class GameScene {
             time: this.game.state.getFormattedTime(),
             trees: treeCount,
             speed: this.game.speed,
+            carrots: this.game.state.carrotsCollected,
         };
 
         // Сохраняем текущую сцену для использования в GameOverScene
         this.game.state.backgroundScene = this;
         this.game.sceneManager.setScene('gameover');
+    }
+
+    #onCarrotCollected(carrot, index) {
+        // увеличиваем счетчик морковок
+        this.game.state.carrotsCollected++;
+        
+        // удаляем морковку из массива сущностей
+        this.entities.splice(index, 1);
     }
 }

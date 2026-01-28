@@ -71,16 +71,17 @@ export class GameOverScene {
             `Time: ${time}`,
             `Trees: ${trees}`,
             `Speed: ${speed}`,
+            `🥕 Carrots: ${stats.carrots || 0}`,
         ];
 
-        const statsSize = CONFIG.CANVAS_WIDTH / 40;
-        const totalHeight = statsLines.length * (statsSize + 10);
+        const statsSize = CONFIG.CANVAS_WIDTH / 50;
+        const totalHeight = statsLines.length * (statsSize + 8);
         let startY = this.titleY + this.titleSize / 2 + statsSize;
 
         statsLines.forEach((line, index) => {
             const textWidth = this.game.renderer.getTextWidth(line, statsSize);
             const x = (CONFIG.CANVAS_WIDTH - textWidth) / 2;
-            const y = startY + index * (statsSize + 10);
+            const y = startY + index * (statsSize + 8);
 
             this.game.renderer.drawText(
                 line,
@@ -97,20 +98,20 @@ export class GameOverScene {
         const instructions = [
             'Press Enter to Continue'
         ];
-        const instructionSize = CONFIG.CANVAS_WIDTH / 40;
-        const statsSize = CONFIG.CANVAS_WIDTH / 40;
-        const statsLinesCount = 4;
+        const instructionSize = CONFIG.CANVAS_WIDTH / 50; // уменьшили размер
+        const statsSize = CONFIG.CANVAS_WIDTH / 50; // уменьшили размер
+        const statsLinesCount = 5;
         let startY =
             this.titleY
             + this.titleSize / 2
             + statsSize
-            + statsLinesCount * (statsSize + 10)
-            + 40;
+            + statsLinesCount * (statsSize + 8) // уменьшили отступ
+            + 20; // уменьшили отступ
 
         instructions.forEach((instruction, index) => {
             const textWidth = this.game.renderer.getTextWidth(instruction, instructionSize);
             const x = (CONFIG.CANVAS_WIDTH - textWidth) / 2;
-            const y = startY + index * (instructionSize + 10);
+            const y = startY + index * (instructionSize + 8); // уменьшили отступ
 
             this.game.renderer.drawText(
                 instruction,

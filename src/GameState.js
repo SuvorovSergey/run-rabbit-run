@@ -6,6 +6,7 @@ export class GameState {
         this.level = 1;
         this.lastRunStats = null;
         this.backgroundScene = null;
+        this.carrotsCollected = 0;
     }
 
     update(deltaTime) {
@@ -18,6 +19,7 @@ export class GameState {
         this.seconds = 0;
         this.lastRunStats = null;
         this.backgroundScene = null;
+        this.carrotsCollected = 0;
     }
 
     // форматирование времени в MM:SS
