@@ -24,17 +24,18 @@ export class GameScene {
     }
 
     #spawnTree() {
-        // более плотный лес в центре, реже по краям
-        const x = (Math.random() - 0.5) * 2; // от -1 до 1
-        const y = Math.random(); // от 0 до 1
-
-        // квадратичное распределение - больше деревьев в центре
-        const distributionFactor = 1 - x * x * 0.5;
-
-        return new Tree(
-            x * 3000 * distributionFactor,
-            400 + y * 1200
-        );
+        const centerX = this.game.camera.playerX || 0;
+        const forestHalfWidth = this.game.config.FOREST_HALF_WIDTH || 3000;
+    
+        // X: плотнее к центру
+        const xOffset = (Math.random() - 0.5) * 2;
+        const treeX = centerX + xOffset * (1 - Math.abs(xOffset) * 0.5) * forestHalfWidth;
+    
+        // Z: плотнее к кролику
+        const zRandom = Math.random();
+        const treeZ = 400 + zRandom * zRandom * 600;
+    
+        return new Tree(treeX, treeZ);
     }
 
     update(deltaTime) {
@@ -112,12 +113,23 @@ export class GameScene {
     }
 
     #updateEntities(deltaTime) {
+        const forestHalfWidth = this.game.config.FOREST_HALF_WIDTH || 3000;
+        const centerX = this.game.camera.playerX || 0;
+
         this.entities.forEach(entity => {
             entity.z -= 50 * this.game.speed * deltaTime;
+
+            // оборачиваем деревья по X вокруг кролика, чтобы лес был бесконечным
+            if (entity instanceof Tree) {
+                if (entity.x < centerX - forestHalfWidth) {
+                    entity.x += forestHalfWidth * 2;
+                } else if (entity.x > centerX + forestHalfWidth) {
+                    entity.x -= forestHalfWidth * 2;
+                }
+            }
         });
 
         this.entities = this.entities.filter(entity => entity.z > 0);
-
 
         const treeCount = this.entities.filter(e => e instanceof Tree).length;
 
