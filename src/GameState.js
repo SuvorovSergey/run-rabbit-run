@@ -7,11 +7,30 @@ export class GameState {
         this.lastRunStats = null;
         this.backgroundScene = null;
         this.carrotsCollected = 0;
+        this.noclipActive = false;
+        this.noclipTimeLeft = 0;
+        this.noclipNotification = null;
     }
 
     update(deltaTime) {
         if (!this.isPaused) {
             this.seconds += deltaTime;
+            
+            // Обновляем таймер noclip
+            if (this.noclipActive) {
+                this.noclipTimeLeft -= deltaTime;
+                if (this.noclipTimeLeft <= 0) {
+                    this.toggleNoclip();
+                }
+            }
+            
+            // Обновляем таймер уведомления
+            if (this.noclipNotification) {
+                this.noclipNotification.elapsed += deltaTime;
+                if (this.noclipNotification.elapsed >= this.noclipNotification.duration) {
+                    this.noclipNotification = null;
+                }
+            }
         }
     }
 
@@ -20,6 +39,9 @@ export class GameState {
         this.lastRunStats = null;
         this.backgroundScene = null;
         this.carrotsCollected = 0;
+        this.noclipActive = false;
+        this.noclipTimeLeft = 0;
+        this.noclipNotification = null;
     }
 
     // форматирование времени в MM:SS
@@ -32,5 +54,25 @@ export class GameState {
 
     togglePause() {
         this.isPaused = !this.isPaused;
+    }
+
+    toggleNoclip() {
+        this.noclipActive = !this.noclipActive;
+        
+        if (this.noclipActive) {
+            this.noclipTimeLeft = 180; // 3 минуты в секундах
+            this.noclipNotification = {
+                text: 'NOCLIP ACTIVATED - 3 minutes',
+                duration: 3,
+                elapsed: 0
+            };
+        } else {
+            this.noclipTimeLeft = 0;
+            this.noclipNotification = {
+                text: 'NOCLIP DEACTIVATED',
+                duration: 3,
+                elapsed: 0
+            };
+        }
     }
 }

@@ -126,7 +126,12 @@ export class GameScene {
         }
 
         // случайное появление поляны
-        if (!this.meadow && Math.random() < 0.0005) {
+        const treeCount = this.entities.filter(e => e instanceof Tree).length;
+        const meadowChance = treeCount > 1000 ? 
+            this.game.config.MEADOW_SPAWN_CHANCE * 2 : 
+            this.game.config.MEADOW_SPAWN_CHANCE;
+            
+        if (!this.meadow && Math.random() < meadowChance) {
             this.meadow = {
                 duration: 3, // 3 секунды
                 elapsed: 0,
@@ -155,6 +160,7 @@ export class GameScene {
         this.#drawLevel();
         this.#drawCarrotCount();
         this.#drawMushroomNotification();
+        this.#drawNoclipNotification();
         this.#drawPlayer();
     }
 
@@ -247,6 +253,36 @@ export class GameScene {
         );
     }
 
+    #drawNoclipNotification() {
+        if (!this.game.state.noclipNotification) {
+            return;
+        }
+
+        const notificationSize = this.game.config.CANVAS_WIDTH / 25;
+        const x = this.game.config.CANVAS_WIDTH / 2;
+        const y = 150;
+
+        // Вычисляем прозрачность на основе времени
+        const alpha = Math.max(0, 1 - (this.game.state.noclipNotification.elapsed / this.game.state.noclipNotification.duration));
+        
+        // Выбираем цвет в зависимости от состояния
+        const color = this.game.state.noclipActive ? 
+            `rgba(0, 255, 0, ${alpha})` : // зеленый для активации
+            `rgba(255, 165, 0, ${alpha})`; // оранжевый для деактивации
+        
+        this.game.renderer.drawText(
+            this.game.state.noclipNotification.text,
+            x,
+            y,
+            {
+                color: color,
+                font: `${notificationSize}px Arial`,
+                align: 'center',
+                shadow: true
+            }
+        );
+    }
+
 
     #updateLevel() {
         const level = Math.floor(this.game.state.seconds / 15) + 1;
@@ -258,8 +294,8 @@ export class GameScene {
         this.game.state.treeCount = this.game.state.treeCount + 100;
 
         if (level % 2 === 0) {
-            this.game.speed += 0.3;
-            this.game.speed = Math.min(this.game.speed, 3); // ограничиваем скорость максимум 3
+            this.game.speed += this.game.config.SPEED_INCREMENT;
+            this.game.speed = Math.min(this.game.speed, this.game.config.MAX_SPEED);
         }
     }
 
@@ -284,6 +320,10 @@ export class GameScene {
 
         if (input.isKeyPressed('KeyF') || input.isKeyPressed('F')) {
             this.game.renderer.weatherManager.toggleFog();
+        }
+
+        if (input.isKeyPressed('KeyC') || input.isKeyPressed('C')) {
+            this.game.state.toggleNoclip();
         }
 
         if (input.isKeyDown('ArrowLeft')) {
@@ -409,39 +449,41 @@ export class GameScene {
         const playerY = this.game.config.CANVAS_HEIGHT - 65;
         const playerRadius = 14;
 
-        // проверка столкновений с деревьями
-        for (const entity of this.entities) {
-            if (!(entity instanceof Tree)) {
-                continue
-            };
+        // проверка столкновений с деревьями (игнорируем при noclip)
+        if (!this.game.state.noclipActive) {
+            for (const entity of this.entities) {
+                if (!(entity instanceof Tree)) {
+                    continue
+                };
 
-            if (!entity.collider) {
-                continue
-            };
+                if (!entity.collider) {
+                    continue
+                };
 
-            if (entity.z <= 0 || entity.z > 300) {
-                continue
-            };
+                if (entity.z <= 0 || entity.z > 300) {
+                    continue
+                };
 
-            const p = this.game.camera.project(entity);
-            
-            if (!p || p.scale < 0.05) {
-                continue
-            };
+                const p = this.game.camera.project(entity);
+                
+                if (!p || p.scale < 0.05) {
+                    continue
+                };
 
-            const treeBaseY = p.y; // основание дерева на земле
+                const treeBaseY = p.y; // основание дерева на земле
 
-            const treeRadius =
-                (entity.collider.width / 2) * p.scale;
+                const treeRadius =
+                    (entity.collider.width / 2) * p.scale;
 
-            const dx = p.x - playerX;
-            const dy = treeBaseY - playerY;
+                const dx = p.x - playerX;
+                const dy = treeBaseY - playerY;
 
-            const r = playerRadius + treeRadius;
+                const r = playerRadius + treeRadius;
 
-            if (dx * dx + dy * dy < r * r) {
-                this.#onPlayerHit(entity);
-                return;
+                if (dx * dx + dy * dy < r * r) {
+                    this.#onPlayerHit(entity);
+                    return;
+                }
             }
         }
         
@@ -534,13 +576,16 @@ export class GameScene {
         // увеличиваем счетчик морковок
         this.game.state.carrotsCollected++;
         
+        // увеличиваем скорость с учетом максимальной
+        this.game.speed = Math.min(this.game.config.MAX_SPEED, this.game.speed + this.game.config.SPEED_INCREMENT);
+        
         // удаляем морковку из массива сущностей
         this.entities.splice(index, 1);
     }
 
     #onMushroomCollected(mushroom, index) {
-        // снижаем скорость на 0.3
-        this.game.speed = Math.max(0.5, this.game.speed - 0.3); // минимальная скорость 0.5
+        // снижаем скорость на значение из конфига
+        this.game.speed = Math.max(this.game.config.MIN_SPEED, this.game.speed - this.game.config.MUSHROOM_SLOWDOWN);
         
         // активируем уведомление о снижении скорости
         this.mushroomNotification = {
