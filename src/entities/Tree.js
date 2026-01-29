@@ -37,10 +37,10 @@ export class Tree extends Entity {
             crownScale: crownScale,
             crownWidth: crownWidth,
             crownHeight: crownHeight,
-            crownColor: `rgb(0, ${100 + Math.floor(Math.random() * 155)}, 0)`,
-            trunkColor: `rgb(${70 + Math.floor(Math.random() * 60)}, 
-                    ${30 + Math.floor(Math.random() * 40)}, 
-                    ${Math.floor(Math.random() * 20)})`,
+            crownColor: `rgb(0, ${20 + Math.floor(Math.random() * 60)}, 0)`, // темная зелень для ночи
+            trunkColor: `rgb(${20 + Math.floor(Math.random() * 40)}, 
+                    ${10 + Math.floor(Math.random() * 20)}, 
+                    ${5 + Math.floor(Math.random() * 10)})`, // темный коричневый ствол
             trunkWidth: trunkWidth,
             trunkHeight: trunkHeight,
         };
