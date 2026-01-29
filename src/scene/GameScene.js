@@ -49,7 +49,7 @@ export class GameScene {
         const zRandom = Math.random();
         const treeZ = 400 + zRandom * zRandom * 600;
     
-        return new Tree(treeX, treeZ);
+        return new Tree(treeX, treeZ, this.game.renderer.themeManager);
     }
 
     #spawnCarrot() {
@@ -87,6 +87,10 @@ export class GameScene {
         };
         this.game.state.update(deltaTime);
 
+        // Обновляем автоматическую смену тем и переходы
+        this.game.renderer.themeManager.updateAutoSwitch(deltaTime);
+        this.game.renderer.themeManager.updateTransition(deltaTime);
+
         // обновляем таймер уведомления о мухоморе
         if (this.mushroomNotification) {
             this.mushroomNotification.elapsed += deltaTime;
@@ -103,6 +107,7 @@ export class GameScene {
     draw() {
         this.game.renderer.clear();
         this.game.renderer.drawSky();
+        this.game.renderer.drawGround();
         this.game.renderer.drawStars();
         this.#drawHorizon();
         this.#drawEntities();
@@ -215,6 +220,10 @@ export class GameScene {
 
         if (input.isKeyPressed('Escape')) {
             this.game.sceneManager.setScene('start');
+        }
+
+        if (input.isKeyPressed('KeyS') || input.isKeyPressed('S')) {
+            this.game.renderer.themeManager.startThemeTransition();
         }
 
         if (input.isKeyDown('ArrowLeft')) {

@@ -1,4 +1,5 @@
 import { CONFIG } from '../Config.js';
+import { ThemeManager } from '../themes/ThemeManager.js';
 
 export class Renderer {
     constructor(canvas) {
@@ -6,6 +7,10 @@ export class Renderer {
         this.canvas.width = CONFIG.CANVAS_WIDTH;
         this.canvas.height = CONFIG.CANVAS_HEIGHT;
         this.ctx = canvas.getContext('2d');
+        
+        // Инициализация системы тем
+        this.themeManager = new ThemeManager();
+        this.themeManager.setRandomTheme();
         
         // Генерируем звезды один раз при инициализации
         this.stars = this.generateStars();
@@ -57,35 +62,50 @@ export class Renderer {
     }
 
     drawSky() {
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        gradient.addColorStop(0, '#0C1445'); // темно-синий верх
-        gradient.addColorStop(0.5, '#1e3c72'); // средний синий
-        gradient.addColorStop(1, '#2a5298'); // более светлый синий у горизонта
+        const colors = this.themeManager.getInterpolatedColors().sky;
+        const horizonY = this.canvas.height * 0.4;
+        
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, horizonY);
+        gradient.addColorStop(0, colors.top);
+        gradient.addColorStop(0.5, colors.middle);
+        gradient.addColorStop(1, colors.bottom);
         
         this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillRect(0, 0, this.canvas.width, horizonY);
+    }
+
+    drawGround() {
+        const groundColor = this.themeManager.getInterpolatedColors().ground;
+        const horizonY = this.canvas.height * 0.4;
+        
+        this.ctx.fillStyle = groundColor;
+        this.ctx.fillRect(0, horizonY, this.canvas.width, this.canvas.height - horizonY);
     }
 
     generateStars() {
         const stars = [];
-        const horizonY = this.canvas.height * 0.4; // такая же высота горизонта как в Camera.js
-        const margin = 50; // отступ от линии горизонта
+        const horizonY = this.canvas.height * 0.4;
+        const margin = 50;
         
-        // Обычные звезды - только выше горизонта с отступом
+        // Генерируем максимальное количество звезд для всех сценариев
+        // Ночная тема: 150 обычных + 20 ярких
+        // Утренняя тема: 0 звезд (они просто не будут отображаться)
+        
+        // Обычные звезды
         for (let i = 0; i < 150; i++) {
             stars.push({
                 x: Math.random() * this.canvas.width,
-                y: Math.random() * (horizonY - margin), // с отступом от горизонта
+                y: Math.random() * (horizonY - margin),
                 size: Math.random() * 2,
                 opacity: 0.3 + Math.random() * 0.7
             });
         }
         
-        // Яркие звезды со свечением - только выше горизонта с отступом
+        // Яркие звезды со свечением
         for (let i = 0; i < 20; i++) {
             stars.push({
                 x: Math.random() * this.canvas.width,
-                y: Math.random() * (horizonY - margin), // с отступом от горизонта
+                y: Math.random() * (horizonY - margin),
                 size: 1.5 + Math.random() * 1.5,
                 bright: true
             });
@@ -95,6 +115,13 @@ export class Renderer {
     }
 
     drawStars() {
+        const starOpacity = this.themeManager.getInterpolatedColors().starOpacity;
+        
+        if (starOpacity === 0) return; // Если звезды не видны, не рисуем их
+        
+        this.ctx.save();
+        this.ctx.globalAlpha = starOpacity;
+        
         this.stars.forEach(star => {
             if (star.bright) {
                 // Рисуем яркую звезду со свечением
@@ -116,7 +143,7 @@ export class Renderer {
             } else {
                 // Рисуем обычную звезду
                 this.ctx.save();
-                this.ctx.globalAlpha = star.opacity;
+                this.ctx.globalAlpha = star.opacity * starOpacity;
                 this.ctx.fillStyle = 'white';
                 this.ctx.beginPath();
                 this.ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
@@ -124,19 +151,23 @@ export class Renderer {
                 this.ctx.restore();
             }
         });
+        
+        this.ctx.restore();
     }
 
     drawHorizon(y) {
+        const colors = this.themeManager.getInterpolatedColors().horizon;
+        
         this.ctx.save()
         this.ctx.beginPath();
         this.ctx.moveTo(0, y);
         this.ctx.lineTo(this.canvas.width, y);
         
-        // Создаем градиент для линии горизонта, чтобы она лучше вписывалась в ночную тему
+        // Создаем градиент для линии горизонта на основе текущей темы
         const gradient = this.ctx.createLinearGradient(0, y - 2, 0, y + 2);
-        gradient.addColorStop(0, 'rgba(42, 82, 152, 0.3)'); // совпадает с нижним цветом неба
-        gradient.addColorStop(0.5, 'rgba(30, 60, 114, 0.8)'); // более темный центр
-        gradient.addColorStop(1, 'rgba(12, 20, 69, 0.3)'); // совпадает с землей
+        gradient.addColorStop(0, colors.top);
+        gradient.addColorStop(0.5, colors.middle);
+        gradient.addColorStop(1, colors.bottom);
         
         this.ctx.strokeStyle = gradient;
         this.ctx.lineWidth = 2;

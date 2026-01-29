@@ -1,7 +1,12 @@
 import { Entity } from './Entity.js';
+import { ThemeManager } from '../themes/ThemeManager.js';
 export class Tree extends Entity {
-    constructor(x, z) {
+    constructor(x, z, themeManager = null) {
         super(x, z);
+
+        // Используем переданный ThemeManager или создаем временный для получения цветов
+        const theme = themeManager ? themeManager.getCurrentTheme() : new ThemeManager().setRandomTheme();
+        const treeColors = theme.getTreeColors();
 
         const maxTrunkH = 300;
         const minTrunkH = 200;
@@ -37,10 +42,10 @@ export class Tree extends Entity {
             crownScale: crownScale,
             crownWidth: crownWidth,
             crownHeight: crownHeight,
-            crownColor: `rgb(0, ${20 + Math.floor(Math.random() * 60)}, 0)`, // темная зелень для ночи
-            trunkColor: `rgb(${20 + Math.floor(Math.random() * 40)}, 
-                    ${10 + Math.floor(Math.random() * 20)}, 
-                    ${5 + Math.floor(Math.random() * 10)})`, // темный коричневый ствол
+            crownColor: `rgb(0, ${treeColors.crownGreen.min + Math.floor(Math.random() * (treeColors.crownGreen.max - treeColors.crownGreen.min))}, 0)`,
+            trunkColor: `rgb(${treeColors.trunkRed.min + Math.floor(Math.random() * (treeColors.trunkRed.max - treeColors.trunkRed.min))}, 
+                    ${treeColors.trunkGreen.min + Math.floor(Math.random() * (treeColors.trunkGreen.max - treeColors.trunkGreen.min))}, 
+                    ${treeColors.trunkBlue.min + Math.floor(Math.random() * (treeColors.trunkBlue.max - treeColors.trunkBlue.min))})`,
             trunkWidth: trunkWidth,
             trunkHeight: trunkHeight,
         };
