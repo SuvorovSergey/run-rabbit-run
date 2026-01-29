@@ -102,6 +102,8 @@ export class GameScene {
 
     draw() {
         this.game.renderer.clear();
+        this.game.renderer.drawSky();
+        this.game.renderer.drawStars();
         this.#drawHorizon();
         this.#drawEntities();
         this.#drawTime();

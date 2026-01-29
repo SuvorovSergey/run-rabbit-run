@@ -6,6 +6,9 @@ export class Renderer {
         this.canvas.width = CONFIG.CANVAS_WIDTH;
         this.canvas.height = CONFIG.CANVAS_HEIGHT;
         this.ctx = canvas.getContext('2d');
+        
+        // Генерируем звезды один раз при инициализации
+        this.stars = this.generateStars();
     }
 
     clear() {
@@ -53,12 +56,89 @@ export class Renderer {
         return width;
     }
 
+    drawSky() {
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        gradient.addColorStop(0, '#0C1445'); // темно-синий верх
+        gradient.addColorStop(0.5, '#1e3c72'); // средний синий
+        gradient.addColorStop(1, '#2a5298'); // более светлый синий у горизонта
+        
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    generateStars() {
+        const stars = [];
+        const horizonY = this.canvas.height * 0.4; // такая же высота горизонта как в Camera.js
+        const margin = 50; // отступ от линии горизонта
+        
+        // Обычные звезды - только выше горизонта с отступом
+        for (let i = 0; i < 150; i++) {
+            stars.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * (horizonY - margin), // с отступом от горизонта
+                size: Math.random() * 2,
+                opacity: 0.3 + Math.random() * 0.7
+            });
+        }
+        
+        // Яркие звезды со свечением - только выше горизонта с отступом
+        for (let i = 0; i < 20; i++) {
+            stars.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * (horizonY - margin), // с отступом от горизонта
+                size: 1.5 + Math.random() * 1.5,
+                bright: true
+            });
+        }
+        
+        return stars;
+    }
+
+    drawStars() {
+        this.stars.forEach(star => {
+            if (star.bright) {
+                // Рисуем яркую звезду со свечением
+                const gradient = this.ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.size * 3);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.beginPath();
+                this.ctx.arc(star.x, star.y, star.size * 3, 0, Math.PI * 2);
+                this.ctx.fill();
+                
+                // Центральная точка звезды
+                this.ctx.fillStyle = 'white';
+                this.ctx.beginPath();
+                this.ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                this.ctx.fill();
+            } else {
+                // Рисуем обычную звезду
+                this.ctx.save();
+                this.ctx.globalAlpha = star.opacity;
+                this.ctx.fillStyle = 'white';
+                this.ctx.beginPath();
+                this.ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.restore();
+            }
+        });
+    }
+
     drawHorizon(y) {
         this.ctx.save()
         this.ctx.beginPath();
         this.ctx.moveTo(0, y);
         this.ctx.lineTo(this.canvas.width, y);
-        this.ctx.strokeStyle = 'gray';
+        
+        // Создаем градиент для линии горизонта, чтобы она лучше вписывалась в ночную тему
+        const gradient = this.ctx.createLinearGradient(0, y - 2, 0, y + 2);
+        gradient.addColorStop(0, 'rgba(42, 82, 152, 0.3)'); // совпадает с нижним цветом неба
+        gradient.addColorStop(0.5, 'rgba(30, 60, 114, 0.8)'); // более темный центр
+        gradient.addColorStop(1, 'rgba(12, 20, 69, 0.3)'); // совпадает с землей
+        
+        this.ctx.strokeStyle = gradient;
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
         this.ctx.closePath();

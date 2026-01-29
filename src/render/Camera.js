@@ -3,7 +3,7 @@ export class Camera {
         this.width = config.CANVAS_WIDTH;
         this.height = config.CANVAS_HEIGHT;
 
-        this.horizonY = this.height * 0.6;
+        this.horizonY = this.height * 0.4;
 
         this.depth = 50;      // сила перспективы
         this.playerX = 0;     // позиция игрока в мире
