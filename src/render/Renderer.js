@@ -1,5 +1,6 @@
 import { CONFIG } from '../Config.js';
 import { ThemeManager } from '../themes/ThemeManager.js';
+import { WeatherManager } from '../weather/WeatherManager.js';
 
 export class Renderer {
     constructor(canvas) {
@@ -11,6 +12,9 @@ export class Renderer {
         // Инициализация системы тем
         this.themeManager = new ThemeManager();
         this.themeManager.setRandomTheme();
+        
+        // Инициализация системы погоды
+        this.weatherManager = new WeatherManager(canvas);
         
         // Генерируем звезды один раз при инициализации
         this.stars = this.generateStars();
@@ -416,5 +420,185 @@ export class Renderer {
         this.ctx.fill();
 
         this.ctx.restore();
+    }
+
+    drawRain() {
+        const weatherEffects = this.weatherManager.getWeatherEffects();
+        
+        if (weatherEffects.rainIntensity === 0) return;
+        
+        this.ctx.save();
+        
+        const activeDrops = Math.floor(weatherEffects.raindrops.length * weatherEffects.rainIntensity);
+        
+        for (let i = 0; i < activeDrops; i++) {
+            const drop = weatherEffects.raindrops[i];
+            
+            const blueIntensity = Math.floor(200 + weatherEffects.rainIntensity * 55);
+            const alpha = drop.opacity * weatherEffects.rainIntensity;
+            
+            this.ctx.strokeStyle = `rgba(${blueIntensity}, ${blueIntensity}, 255, ${alpha})`;
+            this.ctx.lineWidth = drop.width;
+            this.ctx.lineCap = 'round';
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(drop.x, drop.y);
+            this.ctx.lineTo(drop.x + weatherEffects.windForce * 2, drop.y + drop.length);
+            this.ctx.stroke();
+        }
+        
+        this.ctx.restore();
+    }
+
+    drawFog() {
+        const weatherEffects = this.weatherManager.getWeatherEffects();
+        
+        if (weatherEffects.fogIntensity === 0) return;
+        
+        this.ctx.save();
+        
+        const time = Date.now() * 0.00005;
+        const horizonY = this.canvas.height * 0.4;
+        
+        const mainGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        mainGradient.addColorStop(0, `rgba(230, 235, 245, ${weatherEffects.fogIntensity * 0.1})`);
+        mainGradient.addColorStop(0.2, `rgba(220, 225, 235, ${weatherEffects.fogIntensity * 0.2})`);
+        mainGradient.addColorStop(0.4, `rgba(210, 215, 225, ${weatherEffects.fogIntensity * 0.4})`);
+        mainGradient.addColorStop(0.7, `rgba(195, 200, 210, ${weatherEffects.fogIntensity * 0.6})`);
+        mainGradient.addColorStop(1, `rgba(180, 185, 195, ${weatherEffects.fogIntensity * 0.3})`);
+        
+        this.ctx.fillStyle = mainGradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        const horizonFogGradient = this.ctx.createLinearGradient(
+            0, horizonY - 100,
+            0, horizonY + 150
+        );
+        
+        horizonFogGradient.addColorStop(0, `rgba(200, 205, 215, 0)`);
+        horizonFogGradient.addColorStop(0.3, `rgba(190, 195, 205, ${weatherEffects.fogIntensity * 0.4})`);
+        horizonFogGradient.addColorStop(0.5, `rgba(180, 185, 195, ${weatherEffects.fogIntensity * 0.7})`);
+        horizonFogGradient.addColorStop(0.7, `rgba(170, 175, 185, ${weatherEffects.fogIntensity * 0.5})`);
+        horizonFogGradient.addColorStop(1, `rgba(160, 165, 175, ${weatherEffects.fogIntensity * 0.2})`);
+        
+        this.ctx.fillStyle = horizonFogGradient;
+        this.ctx.fillRect(0, horizonY - 100, this.canvas.width, 250);
+        
+        for (let i = 0; i < 3; i++) {
+            const layerIntensity = weatherEffects.fogIntensity * (0.08 - i * 0.02);
+            const offset = i * 30;
+            
+            this.ctx.globalAlpha = layerIntensity;
+            
+            for (let x = -offset; x < this.canvas.width + offset; x += 180) {
+                const noiseX = Math.sin(x * 0.002 + time + i) * 60;
+                
+                for (let y = horizonY - 80; y < horizonY + 120; y += 60) {
+                    const noiseY = Math.cos(y * 0.003 + time * 0.7 + i) * 20;
+                    
+                    const centerX = x + noiseX + 90;
+                    const centerY = y + noiseY + 30;
+                    
+                    const fogGradient = this.ctx.createRadialGradient(
+                        centerX, centerY, 0,
+                        centerX, centerY, 100
+                    );
+                    
+                    fogGradient.addColorStop(0, `rgba(220, 225, 235, ${layerIntensity})`);
+                    fogGradient.addColorStop(0.4, `rgba(210, 215, 225, ${layerIntensity * 0.8})`);
+                    fogGradient.addColorStop(0.8, `rgba(200, 205, 215, ${layerIntensity * 0.4})`);
+                    fogGradient.addColorStop(1, `rgba(190, 195, 205, 0)`);
+                    
+                    this.ctx.fillStyle = fogGradient;
+                    this.ctx.fillRect(centerX - 100, centerY - 100, 200, 200);
+                }
+            }
+        }
+        
+        const groundFogGradient = this.ctx.createLinearGradient(
+            0, this.canvas.height * 0.8,
+            0, this.canvas.height
+        );
+        
+        groundFogGradient.addColorStop(0, `rgba(180, 185, 195, 0)`);
+        groundFogGradient.addColorStop(0.5, `rgba(175, 180, 190, ${weatherEffects.fogIntensity * 0.15})`);
+        groundFogGradient.addColorStop(1, `rgba(170, 175, 185, ${weatherEffects.fogIntensity * 0.25})`);
+        
+        this.ctx.globalAlpha = 1;
+        this.ctx.fillStyle = groundFogGradient;
+        this.ctx.fillRect(0, this.canvas.height * 0.8, this.canvas.width, this.canvas.height * 0.2);
+        
+        if (this.ctx.filter !== undefined) {
+            this.ctx.filter = `blur(${weatherEffects.fogIntensity * 1.5}px)`;
+            this.ctx.globalAlpha = weatherEffects.fogIntensity * 0.08;
+            this.ctx.fillStyle = `rgba(200, 205, 215, ${weatherEffects.fogIntensity * 0.15})`;
+            this.ctx.fillRect(0, horizonY - 50, this.canvas.width, 200);
+            this.ctx.filter = 'none';
+        }
+        
+        this.ctx.restore();
+    }
+
+    drawLightning() {
+        const weatherEffects = this.weatherManager.getWeatherEffects();
+        
+        if (!weatherEffects.lightning) return;
+        
+        this.ctx.save();
+        
+        const lightning = weatherEffects.lightning;
+        const alpha = 1 - (lightning.elapsed / lightning.duration);
+        
+        // Вспышка освещает весь экран
+        this.ctx.fillStyle = `rgba(255, 255, 255, ${alpha * lightning.intensity * 0.3})`;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Рисуем молнию
+        if (alpha > 0.5) {
+            this.ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+            this.ctx.lineWidth = 3;
+            this.ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+            this.ctx.shadowBlur = 20;
+            
+            this.ctx.beginPath();
+            
+            // Генерируем путь молнии
+            let x = Math.random() * this.canvas.width;
+            let y = 0;
+            
+            this.ctx.moveTo(x, y);
+            
+            while (y < this.canvas.height * 0.7) {
+                y += 20 + Math.random() * 40;
+                x += (Math.random() - 0.5) * 50;
+                this.ctx.lineTo(x, y);
+            }
+            
+            this.ctx.stroke();
+        }
+        
+        this.ctx.restore();
+    }
+
+    applyWeatherEffects() {
+        const weatherEffects = this.weatherManager.getWeatherEffects();
+        
+        // Эффекты дождя
+        if (weatherEffects.rainIntensity > 0) {
+            // Затемнение экрана во время дождя
+            this.ctx.save();
+            this.ctx.fillStyle = `rgba(0, 0, 50, ${weatherEffects.rainIntensity * 0.1})`;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.restore();
+        }
+        
+        // Эффекты тумана
+        if (weatherEffects.fogIntensity > 0) {
+            // Общее затемнение и снижение контрастности
+            this.ctx.save();
+            this.ctx.fillStyle = `rgba(150, 150, 160, ${weatherEffects.fogIntensity * 0.15})`;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.restore();
+        }
     }
 }

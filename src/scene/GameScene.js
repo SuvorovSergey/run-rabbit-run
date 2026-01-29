@@ -9,6 +9,7 @@ export class GameScene {
         this.entities = [];
         this.player = new Player(0, 0);
         this.mushroomNotification = null;
+        this.meadow = null;
     }
 
     init() {
@@ -19,6 +20,7 @@ export class GameScene {
         this.game.state.treeCount = this.game.config.TREE_INITIAL_COUNT;
         this.game.state.carrotsCollected = 0;
         this.mushroomNotification = null;
+        this.meadow = null;
 
         // наполняем стартовый лес деревьями
         this.entities = [];
@@ -41,8 +43,21 @@ export class GameScene {
         const centerX = this.game.camera.playerX || 0;
         const forestHalfWidth = this.game.config.FOREST_HALF_WIDTH || 3000;
     
-        // X: плотнее к центру
-        const xOffset = (Math.random() - 0.5) * 2;
+        let xOffset;
+        
+        // если активна поляна, спавним деревья только сбоку
+        if (this.meadow) {
+            const meadowRadius = 400;
+            // генерируем позицию только за пределами поляны
+            do {
+                xOffset = (Math.random() - 0.5) * 2;
+            } while (Math.abs(xOffset * forestHalfWidth) < meadowRadius);
+        } else {
+            // обычная генерация - плотнее к центру
+            xOffset = (Math.random() - 0.5) * 2;
+        }
+        
+        // X: плотнее к центру (если не на поляне)
         const treeX = centerX + xOffset * (1 - Math.abs(xOffset) * 0.5) * forestHalfWidth;
     
         // Z: плотнее к кролику
@@ -90,6 +105,9 @@ export class GameScene {
         // Обновляем автоматическую смену тем и переходы
         this.game.renderer.themeManager.updateAutoSwitch(deltaTime);
         this.game.renderer.themeManager.updateTransition(deltaTime);
+        
+        // Обновляем погодную систему
+        this.game.renderer.weatherManager.update(deltaTime);
 
         // обновляем таймер уведомления о мухоморе
         if (this.mushroomNotification) {
@@ -99,9 +117,27 @@ export class GameScene {
             }
         }
 
+        // обновляем поляну
+        if (this.meadow) {
+            this.meadow.elapsed += deltaTime;
+            if (this.meadow.elapsed >= this.meadow.duration) {
+                this.meadow = null;
+            }
+        }
+
+        // случайное появление поляны
+        if (!this.meadow && Math.random() < 0.0005) {
+            this.meadow = {
+                duration: 3, // 3 секунды
+                elapsed: 0,
+                x: this.game.camera.playerX
+            };
+        }
+
         this.#updateLevel();
         this.#updateEntities(deltaTime);
         this.#checkCollisions();
+        this.#applyWeatherEffects();
     }
 
     draw() {
@@ -111,6 +147,10 @@ export class GameScene {
         this.game.renderer.drawStars();
         this.#drawHorizon();
         this.#drawEntities();
+        this.game.renderer.applyWeatherEffects();
+        this.game.renderer.drawFog();
+        this.game.renderer.drawRain();
+        this.game.renderer.drawLightning();
         this.#drawTime();
         this.#drawLevel();
         this.#drawCarrotCount();
@@ -125,7 +165,16 @@ export class GameScene {
         const y = 40;
 
         const treeCount = this.entities.filter(e => e instanceof Tree).length;
-        const statsText = `Trees: ${treeCount}  Speed: ${this.game.speed.toFixed(1)}`;
+        const weatherEffects = this.game.renderer.weatherManager.getWeatherEffects();
+        let weatherStatus = '☀️ Clear';
+        
+        if (weatherEffects.currentWeatherType === 'rain') {
+            weatherStatus = '🌧️ Rain';
+        } else if (weatherEffects.currentWeatherType === 'fog') {
+            weatherStatus = '🌫️ Fog';
+        }
+        
+        const statsText = `Trees: ${treeCount}  Speed: ${this.game.speed.toFixed(1)}  Weather: ${weatherStatus}`;
         const statsSize = levelSize * 0.5;
         const statsY = y + levelSize;
 
@@ -198,6 +247,7 @@ export class GameScene {
         );
     }
 
+
     #updateLevel() {
         const level = Math.floor(this.game.state.seconds / 15) + 1;
         if (level === this.game.state.level) {
@@ -226,6 +276,14 @@ export class GameScene {
 
         if (input.isKeyPressed('KeyS') || input.isKeyPressed('S')) {
             this.game.renderer.themeManager.startThemeTransition();
+        }
+
+        if (input.isKeyPressed('KeyR') || input.isKeyPressed('R')) {
+            this.game.renderer.weatherManager.toggleRain();
+        }
+
+        if (input.isKeyPressed('KeyF') || input.isKeyPressed('F')) {
+            this.game.renderer.weatherManager.toggleFog();
         }
 
         if (input.isKeyDown('ArrowLeft')) {
@@ -493,5 +551,28 @@ export class GameScene {
         
         // удаляем мухомор из массива сущностей
         this.entities.splice(index, 1);
+    }
+
+    #applyWeatherEffects() {
+        const weatherEffects = this.game.renderer.weatherManager.getWeatherEffects();
+        
+        // Применяем эффекты погоды к скорости игры
+        const baseSpeed = this.game.config.SPEED;
+        const weatherSpeedModifier = weatherEffects.speedMultiplier;
+        const currentSpeed = baseSpeed * weatherSpeedModifier;
+        
+        // Плавно изменяем скорость
+        if (Math.abs(this.game.speed - currentSpeed) > 0.01) {
+            this.game.speed += (currentSpeed - this.game.speed) * 0.1;
+        }
+        
+        // Применяем эффекты видимости к отрисовке объектов
+        // Туман сильно снижает видимость дальних объектов
+        if (weatherEffects.fogIntensity > 0.5) {
+            // Можно добавить дополнительную логику для скрытия дальних объектов
+            this.visibilityThreshold = 300 * (1 - weatherEffects.fogIntensity * 0.5);
+        } else {
+            this.visibilityThreshold = 0;
+        }
     }
 }
