@@ -8,7 +8,7 @@ export class WeatherManager {
         
         this.weatherTimer = 0;
         this.weatherDuration = 20;
-        this.weatherChance = 0.002;
+        this.weatherChance = 0.0002;
         
         this.rain = new Rain(canvas);
         this.fog = new Fog(canvas);
