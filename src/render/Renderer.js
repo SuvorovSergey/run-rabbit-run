@@ -353,9 +353,9 @@ export class Renderer {
         this.ctx.fillStyle = orangeColor;
         
         this.ctx.beginPath();
-        this.ctx.moveTo(x, y);
-        this.ctx.lineTo(x - carrotWidth / 2, y + carrotHeight);
-        this.ctx.lineTo(x + carrotWidth / 2, y + carrotHeight);
+        this.ctx.moveTo(x, y + carrotHeight);
+        this.ctx.lineTo(x - carrotWidth / 2, y);
+        this.ctx.lineTo(x + carrotWidth / 2, y);
         this.ctx.closePath();
         this.ctx.fill();
 
