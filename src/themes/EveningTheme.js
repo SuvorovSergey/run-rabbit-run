@@ -31,7 +31,7 @@ export class EveningTheme extends Theme {
     }
 
     getGroundColor() {
-        return '#CD853F'; // пергаментно-коричневый
+        return '#CD853F';
     }
 
     getStarOpacity() {

@@ -134,9 +134,10 @@ export class GameScene {
             x,
             y,
             {
-                color: 'white',
+                color: '#87CEEB',
                 font: `${levelSize}px Arial`,
-                align: 'left'
+                align: 'left',
+                shadow: true
             }
         );
 
@@ -145,9 +146,10 @@ export class GameScene {
             x,
             statsY,
             {
-                color: 'white',
+                color: '#90EE90',
                 font: `${statsSize}px Arial`,
-                align: 'left'
+                align: 'left',
+                shadow: true
             }
         );
     }
@@ -286,7 +288,10 @@ export class GameScene {
             x,
             y,
             {
+                color: '#FFD700',
                 font: `${timeSize}px Arial`,
+                align: 'left',
+                shadow: true
             }
         );
     }

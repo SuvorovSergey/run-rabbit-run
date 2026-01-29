@@ -31,7 +31,7 @@ export class NightTheme extends Theme {
     }
 
     getGroundColor() {
-        return '#1a1a2e'; // темный сине-фиолетовый для ночи
+        return '#1a1a2e';
     }
 
     getStarOpacity() {

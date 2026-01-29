@@ -23,7 +23,7 @@ export class DayTheme extends Theme {
 
     getTreeColors() {
         return {
-            crownGreen: { min: 120, max: 220 }, // яркая летняя зелень
+            crownGreen: { min: 120, max: 220 },
             trunkRed: { min: 80, max: 120 },
             trunkGreen: { min: 40, max: 60 },
             trunkBlue: { min: 15, max: 25 }
@@ -31,7 +31,7 @@ export class DayTheme extends Theme {
     }
 
     getGroundColor() {
-        return '#7CB342'; // более естественный зеленый травяной цвет
+        return '#7CB342';
     }
 
     getStarOpacity() {
