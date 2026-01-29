@@ -127,9 +127,15 @@ export class GameScene {
 
         // случайное появление поляны
         const treeCount = this.entities.filter(e => e instanceof Tree).length;
-        const meadowChance = treeCount > 1000 ? 
-            this.game.config.MEADOW_SPAWN_CHANCE * 2 : 
-            this.game.config.MEADOW_SPAWN_CHANCE;
+        let meadowChance = this.game.config.MEADOW_SPAWN_CHANCE;
+        
+        if (treeCount >= 2000) {
+            meadowChance *= 4; // при 2000+ деревьев шанс в 4 раза выше
+        } else if (treeCount >= 1500) {
+            meadowChance *= 3; // при 1500+ деревьев шанс в 3 раза выше
+        } else if (treeCount > 1000) {
+            meadowChance *= 2; // при 1000+ деревьев шанс в 2 раза выше
+        }
             
         if (!this.meadow && Math.random() < meadowChance) {
             this.meadow = {
