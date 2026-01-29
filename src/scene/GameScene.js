@@ -556,16 +556,6 @@ export class GameScene {
     #applyWeatherEffects() {
         const weatherEffects = this.game.renderer.weatherManager.getWeatherEffects();
         
-        // Применяем эффекты погоды к скорости игры
-        const baseSpeed = this.game.config.SPEED;
-        const weatherSpeedModifier = weatherEffects.speedMultiplier;
-        const currentSpeed = baseSpeed * weatherSpeedModifier;
-        
-        // Плавно изменяем скорость
-        if (Math.abs(this.game.speed - currentSpeed) > 0.01) {
-            this.game.speed += (currentSpeed - this.game.speed) * 0.1;
-        }
-        
         // Применяем эффекты видимости к отрисовке объектов
         // Туман сильно снижает видимость дальних объектов
         if (weatherEffects.fogIntensity > 0.5) {
