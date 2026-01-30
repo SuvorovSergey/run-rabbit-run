@@ -40,4 +40,4 @@
 
 - JavaScript (ES6 modules)
 - HTML5 Canvas
-- Без фреймворков и внешних библиотек
+
