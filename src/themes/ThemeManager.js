@@ -182,6 +182,15 @@ export class ThemeManager {
         return this.currentTheme;
     }
 
+    getTransitionState() {
+        return {
+            isTransitioning: this.isTransitioning,
+            progress: this.transitionProgress,
+            currentThemeName: this.currentTheme?.name || null,
+            nextThemeName: this.nextTheme?.name || null
+        };
+    }
+
     // Для будущего расширения
     getAvailableThemes() {
         return Array.from(this.themes.keys());

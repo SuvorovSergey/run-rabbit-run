@@ -13,6 +13,7 @@ export class StartScene {
 
     update(deltaTime) {
         if (this.game.input.isKeyPressed('Enter')) {
+            this.game.audio.start();
             this.game.sceneManager.setScene('game')
         }
 
@@ -21,6 +22,7 @@ export class StartScene {
             for (const [touchId, touch] of this.game.input.touches) {
                 // Любое касание запускает игру
                 if (touch.startY > CONFIG.CANVAS_HEIGHT / 2) { // Нижняя половина экрана
+                    this.game.audio.start();
                     this.game.sceneManager.setScene('game');
                     break;
                 }

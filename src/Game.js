@@ -4,6 +4,7 @@ import { SceneManager } from './scene/SceneManager.js';
 import { Input } from './core/Input.js';
 import { Camera } from './render/Camera.js';
 import { CONFIG } from './Config.js';
+import { AudioManager } from './audio/AudioManager.js';
 
 export class Game {
     constructor(canvas) {
@@ -14,6 +15,7 @@ export class Game {
         this.renderer = new Renderer(canvas);
         this.sceneManager = new SceneManager(this);
         this.input = new Input();
+        this.audio = new AudioManager();
         this.lastFrameTime = 0;
     }
 
@@ -40,6 +42,7 @@ export class Game {
 
     update(deltaTime) {
         this.sceneManager.update(deltaTime);
+        this.audio.update(deltaTime);
     }
 
     draw() {

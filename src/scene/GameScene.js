@@ -105,6 +105,39 @@ export class GameScene {
         // Обновляем автоматическую смену тем и переходы
         this.game.renderer.themeManager.updateAutoSwitch(deltaTime);
         this.game.renderer.themeManager.updateTransition(deltaTime);
+
+        const themeState = this.game.renderer.themeManager.getTransitionState();
+        const currentName = themeState.currentThemeName;
+        const nextName = themeState.nextThemeName;
+
+        const isMorning = (name) => name === 'morning';
+        const isDay = (name) => name === 'day';
+        const isNightLike = (name) => name === 'night' || name === 'evening';
+        const isCuckooTime = (name) => name === 'morning' || name === 'day' || name === 'evening';
+
+        const t = themeState.isTransitioning ? themeState.progress : 0;
+
+        const currentMorning = isMorning(currentName) ? 1 : 0;
+        const currentDay = isDay(currentName) ? 1 : 0;
+        const currentNight = isNightLike(currentName) ? 1 : 0;
+        const nextMorning = isMorning(nextName) ? 1 : 0;
+        const nextDay = isDay(nextName) ? 1 : 0;
+        const nextNight = isNightLike(nextName) ? 1 : 0;
+
+        const morningBlend = currentMorning * (1 - t) + nextMorning * t;
+        const dayBlend = currentDay * (1 - t) + nextDay * t;
+        const nightBlend = currentNight * (1 - t) + nextNight * t;
+
+        const weatherEffects = this.game.renderer.weatherManager.getWeatherEffects();
+        const rainBlend = weatherEffects.rainIntensity;
+
+        const currentCuckoo = isCuckooTime(currentName) ? 1 : 0;
+        const nextCuckoo = isCuckooTime(nextName) ? 1 : 0;
+        const cuckooBlend = currentCuckoo * (1 - t) + nextCuckoo * t;
+
+        this.game.audio.start();
+        this.game.audio.setAmbienceBlend({ morning: morningBlend, day: dayBlend, night: nightBlend, rain: rainBlend });
+        this.game.audio.setCuckooEnabled(cuckooBlend > 0.5);
         
         // Обновляем погодную систему
         this.game.renderer.weatherManager.update(deltaTime);
@@ -310,9 +343,15 @@ export class GameScene {
 
         if (input.isKeyPressed('Space')) {
             this.game.state.togglePause();
+            this.game.audio.setPaused(this.game.state.isPaused);
+        }
+
+        if (input.isKeyPressed('KeyM') || input.isKeyPressed('M')) {
+            this.game.audio.toggleMute();
         }
 
         if (input.isKeyPressed('Escape')) {
+            this.game.audio.fadeOut();
             this.game.sceneManager.setScene('start');
         }
 
@@ -565,6 +604,8 @@ export class GameScene {
     #onPlayerHit(tree) {
         const treeCount = this.entities.filter(e => e instanceof Tree).length;
 
+        this.game.audio.playSlam();
+
         this.game.state.lastRunStats = {
             level: this.game.state.level,
             time: this.game.state.getFormattedTime(),
@@ -575,10 +616,13 @@ export class GameScene {
 
         // Сохраняем текущую сцену для использования в GameOverScene
         this.game.state.backgroundScene = this;
+        this.game.audio.fadeOut();
         this.game.sceneManager.setScene('gameover');
     }
 
     #onCarrotCollected(carrot, index) {
+        this.game.audio.playCollect();
+
         // увеличиваем счетчик морковок
         this.game.state.carrotsCollected++;
         
@@ -590,6 +634,8 @@ export class GameScene {
     }
 
     #onMushroomCollected(mushroom, index) {
+        this.game.audio.playCollect();
+
         // снижаем скорость на значение из конфига
         this.game.speed = Math.max(this.game.config.MIN_SPEED, this.game.speed - this.game.config.MUSHROOM_SLOWDOWN);
         
