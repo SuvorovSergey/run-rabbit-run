@@ -3,7 +3,7 @@ export const CONFIG = {
     CANVAS_WIDTH: 1280,
     CANVAS_HEIGHT: 720,
     TREE_INITIAL_COUNT: 300,
-    SPEED: 2.0,
+    SPEED: 1.2,
     MAX_SPEED: 2.4,
     MIN_SPEED: 0.5,
     SPEED_INCREMENT: 0.1,

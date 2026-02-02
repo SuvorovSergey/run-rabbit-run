@@ -2,6 +2,7 @@ import { Player } from '../entities/Player.js';
 import { Tree } from '../entities/Tree.js';
 import { Carrot } from '../entities/Carrot.js';
 import { Mushroom } from '../entities/Mushroom.js';
+import { GameAudioController } from '../audio/GameAudioController.js';
 
 export class GameScene {
     constructor(game) {
@@ -10,6 +11,7 @@ export class GameScene {
         this.player = new Player(0, 0);
         this.mushroomNotification = null;
         this.meadow = null;
+        this.audioController = new GameAudioController(this.game.audio, this.game.renderer.themeManager, this.game.renderer.weatherManager);
     }
 
     init() {
@@ -106,38 +108,7 @@ export class GameScene {
         this.game.renderer.themeManager.updateAutoSwitch(deltaTime);
         this.game.renderer.themeManager.updateTransition(deltaTime);
 
-        const themeState = this.game.renderer.themeManager.getTransitionState();
-        const currentName = themeState.currentThemeName;
-        const nextName = themeState.nextThemeName;
-
-        const isMorning = (name) => name === 'morning';
-        const isDay = (name) => name === 'day';
-        const isNightLike = (name) => name === 'night' || name === 'evening';
-        const isCuckooTime = (name) => name === 'morning' || name === 'day' || name === 'evening';
-
-        const t = themeState.isTransitioning ? themeState.progress : 0;
-
-        const currentMorning = isMorning(currentName) ? 1 : 0;
-        const currentDay = isDay(currentName) ? 1 : 0;
-        const currentNight = isNightLike(currentName) ? 1 : 0;
-        const nextMorning = isMorning(nextName) ? 1 : 0;
-        const nextDay = isDay(nextName) ? 1 : 0;
-        const nextNight = isNightLike(nextName) ? 1 : 0;
-
-        const morningBlend = currentMorning * (1 - t) + nextMorning * t;
-        const dayBlend = currentDay * (1 - t) + nextDay * t;
-        const nightBlend = currentNight * (1 - t) + nextNight * t;
-
-        const weatherEffects = this.game.renderer.weatherManager.getWeatherEffects();
-        const rainBlend = weatherEffects.rainIntensity;
-
-        const currentCuckoo = isCuckooTime(currentName) ? 1 : 0;
-        const nextCuckoo = isCuckooTime(nextName) ? 1 : 0;
-        const cuckooBlend = currentCuckoo * (1 - t) + nextCuckoo * t;
-
-        this.game.audio.start();
-        this.game.audio.setAmbienceBlend({ morning: morningBlend, day: dayBlend, night: nightBlend, rain: rainBlend });
-        this.game.audio.setCuckooEnabled(cuckooBlend > 0.5);
+        this.audioController.update();
         
         // Обновляем погодную систему
         this.game.renderer.weatherManager.update(deltaTime);
